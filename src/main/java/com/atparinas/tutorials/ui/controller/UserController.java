@@ -2,7 +2,10 @@ package com.atparinas.tutorials.ui.controller;
 
 import javax.validation.Valid;
 
+import com.atparinas.tutorials.exceptions.UserServiceException;
 import com.atparinas.tutorials.ui.model.request.UpdateUserDetailsRequestModel;
+import com.atparinas.tutorials.userservice.UserServiceInterface;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +31,11 @@ import java.util.UUID;
 public class UserController {
 
 	Map<String, UserRest> users;
+
+	@Autowired
+	UserServiceInterface userService;
+
+
 	
 	@GetMapping
 	public String getUsers(@RequestParam(value="page", defaultValue="1") int page, 
@@ -39,9 +47,7 @@ public class UserController {
 	@GetMapping(path="/{userId}", produces= {MediaType.APPLICATION_JSON_VALUE})
 	public ResponseEntity<UserRest> getUserById(@PathVariable String userId) {
 
-		String nullString = null;
-
-		int stringLength = nullString.length();
+		if(true) throw new UserServiceException("A User Service Exception is Thrown");
 
 		if(users.containsKey(userId)){
 			return new ResponseEntity<>(users.get(userId), HttpStatus.OK);
@@ -55,22 +61,16 @@ public class UserController {
 	@PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE}, produces= {MediaType.APPLICATION_JSON_VALUE})
 	public ResponseEntity<UserRest> createUser(@Valid @RequestBody UserDetailsRequestModel userDetails) {
 		
-		UserRest returnValue = new UserRest();
-		
-		returnValue.setFirstName(userDetails.getFirstName());
-		returnValue.setEmail(userDetails.getEmail());
-		returnValue.setLastName(userDetails.getLastName());
 
-		String userId = UUID.randomUUID().toString();
-		returnValue.setUserId(userId);
+		UserRest user = userService.createUser(userDetails);
 
 		if(users == null) users = new HashMap<>();
 
-		users.put(userId, returnValue);
+		users.put(user.getUserId(), user);
 
 
 		
-		return new ResponseEntity<UserRest>(returnValue, HttpStatus.OK);
+		return new ResponseEntity<>(user, HttpStatus.OK);
 		
 	}
 	
